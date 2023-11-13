@@ -9,14 +9,13 @@ def read_condensed_dataframe():
     condensed_df = pd.read_csv('./condensed_data.csv', index_col='user_id')
     return condensed_df
 
-#function to find 100 most similar data points
+#function to find 10 most similar data points
 def find_similar_users(user_input, condensed_df):
     similarity_scores = cosine_similarity(user_input, condensed_df)
     similarity_scores = similarity_scores.flatten()
     top_100_indices = similarity_scores.argsort()[-10:][::-1]
     similarity_scores = similarity_scores[top_100_indices]
-    top_100_similar_users = pd.DataFrame({'user_id': condensed_df.index[top_100_indices], 
-                                          'similarity_score': similarity_scores})
+    top_100_similar_users = pd.DataFrame({'user_id': condensed_df.index[top_100_indices], 'similarity_score': similarity_scores})
     return top_100_similar_users
 
 
@@ -46,14 +45,15 @@ def fill_in_gaps(user_input, condensed_df, top_100_similar_users):
     return final_ratings.reshape(1, -1)
 
 
-# Example of user_input (1x40 PCA components)
-user_input = np.array([2.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).reshape(1, -1)
-
-# if condensed_data.csv doesn't exist, create it
-if not os.path.exists('./condensed_data.csv'):
-    condense_dataframe()
-condensed_df = read_condensed_dataframe()
-# Step 5: Find the 100 most similar users and fill gaps in user_input with the ratings from the similar users
-top_100_similar_users = find_similar_users(user_input, condensed_df)
-final_ratings=fill_in_gaps(user_input, condensed_df, top_100_similar_users)
-print(final_ratings)
+def model(user_input):
+    # convert user_input to a 2D numpy array
+    user_input = np.array(user_input).reshape(1, -1)
+    # if condensed_data.csv doesn't exist, create it
+    if not os.path.exists('./condensed_data.csv'):
+        condense_dataframe()
+    condensed_df = read_condensed_dataframe()
+    # Step 5: Find the 100 most similar users and fill gaps in user_input with the ratings from the similar users
+    top_100_similar_users = find_similar_users(user_input, condensed_df)
+    final_ratings=fill_in_gaps(user_input, condensed_df, top_100_similar_users)
+    
+    return final_ratings
